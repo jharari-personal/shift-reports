@@ -5,12 +5,16 @@
 import tkinter as tk
 from tkinter import ttk
 from datetime import datetime
-from os import getenv, startfile
+from os import getenv, startfile, path
+import requests 
 
 # assigning the basic variables
 Login = getenv('username').lower()
 lines = "---"*10
 reps = []
+image = requests.get('https://docs.fxcorporate.com/user-guide/fxcm2.png').content
+with open('fxcm2.png', 'wb') as handler:
+	handler.write(image)
 
 #tk setup
 master = tk.Tk()
@@ -19,7 +23,7 @@ master.title("Global Shift Reports Widget - (Updated Nov 22)")
 
 #initial buttons setup
 pixel = tk.PhotoImage(width=1, height=1)
-photo = tk.PhotoImage(file=r'C:\Users\jharari\Documents\GitHub\python-tools\Shift-Reports\fxcm2.png') #fxcm logo
+photo = tk.PhotoImage(file=path.dirname(path.realpath(__file__)) + "\\fxcm2.png") #fxcm logo
 fsrButton = tk.Button(master, padx=0, pady=0, text = "FSR", image=pixel, bg="lightyellow", width=70, height=70, compound="c", command = lambda: select_team("FSR"))
 cnButton = tk.Button(master, padx=0, pady=0, width=70, height=70, image=pixel, compound="c", text = "Chinese", bg="lightyellow", command = lambda: select_team("China"))
 euButton = tk.Button(master, padx=0, pady=0, width=70, height=70, compound="c", image=pixel, text = "EU ", bg="lightyellow", command = lambda: select_team("EU"))
@@ -86,7 +90,7 @@ def popup_box(message):
 		NiceNow = now.strftime("%Y-%m-%d at %H:%M:%S")
 		label = tk.Label(window, text="Shift Report Logged, on %s." % NiceNow)
 	elif message == "no_country":
-		label = tk.Label(window, text="Please enter a Country or an Account.")
+		label = tk.Label(window, text="Please enter a Country or an Account!")
 	elif message == "no_shift_report":
 		label = tk.Label(window, text="Please enter a Shift Report!")
 	elif message == "count":
@@ -100,16 +104,16 @@ def popup_box(message):
 	button_close.pack(fill='x')
 
 #defining the team that is using the shift report
-def select_team(foo):
-        try:
-                global repsLocation, srLocation, team
-                repsLocation = "X:\\Sales\\Shortcuts\\!Shift_Reports_Folder\\reps" + str(foo) + ".txt"
-                srLocation = "X:\\Sales\\Shortcuts\\!Shift_Reports_Folder\\ShiftReports" + str(foo) + ".txt"
-                team = foo
-                main_function()
-        except FileNotFoundError:
-                popup_box("no_access")
-                return
+def select_team(temp_team):
+	global repsLocation, srLocation, team
+	team = temp_team
+	try:
+		repsLocation = "X:\\Sales\\Shortcuts\\!Shift_Reports_Folder\\reps" + str(team) + ".txt"
+		srLocation = "X:\\Sales\\Shortcuts\\!Shift_Reports_Folder\\ShiftReports" + str(team) + ".txt"
+		main_function()
+	except FileNotFoundError:
+		popup_box("no_access")
+		return
 
 
 
@@ -204,6 +208,8 @@ def more_options():
 
 #this function exports the shift reports into a CSV
 def export():
+	with open (repsLocation, 'rt') as repsFile:
+			reps = repsFile.read().split(',')
 	rep_counts = {rep: 0 for rep in reps}
 	now = datetime.now().strftime("%Y-%m-%d")
 	resultsFile = "Shift Report Export - " + str(now) + " - " + str(team) +" Team.csv"
